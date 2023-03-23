@@ -3,7 +3,7 @@ from blog.models import Comment, Post, Tag
 from django.db.models import Count
 
 def get_related_posts_count(tag):
-    return tag.posts.count()
+    return tag.posts__count
 
 
 def get_likes_count(post):
@@ -35,14 +35,15 @@ def index(request):
     posts = Post.objects.annotate(Count('likes'))
     # popular_posts = sorted(posts, key=get_likes_count, reverse=True)
     popular_posts = posts.order_by('-likes__count')
-    most_popular_posts = (popular_posts)[:5]
+    most_popular_posts = popular_posts[:5]
 
     fresh_posts = Post.objects.order_by('published_at')
     most_fresh_posts = list(fresh_posts)[-5:]
 
-    tags = Tag.objects.all()
-    popular_tags = sorted(tags, key=get_related_posts_count)
-    most_popular_tags = popular_tags[-5:]
+    tags = Tag.objects.annotate(Count('posts'))
+    # popular_tags = sorted(tags, key=get_related_posts_count, reverse=True)
+    popular_tags = tags.order_by('-posts__count')
+    most_popular_tags = popular_tags[:5]
 
     context = {
         'most_popular_posts': [
