@@ -10,8 +10,14 @@ class PostQuerySet(models.QuerySet):
         popular = self.prefetch_related('author', 'tags').annotate(Count(field)).order_by(f'-{field}__count')
         return popular
 
-    def fetch_with_comments_count(self, field, chart_lenth=5):
-        most_popular_posts = self.popular(field)[:chart_lenth]
+    def fetch_with_comments_count(self, field, chart_length=5):
+        '''
+        Add attribute 'comments_count'
+        :param field: field for count and  sort for  result
+        :param chart_length: the length of slice
+        :return: sorted list of posts with length pointed in argument
+        '''
+        most_popular_posts = self.popular(field)[:chart_length]
         posts_comments = self.prefetch_related('author', 'tags').annotate(Count('comments'))
         for post in most_popular_posts:
             for post_comments in posts_comments:
