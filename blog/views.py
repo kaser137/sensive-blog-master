@@ -111,7 +111,7 @@ def post_detail(request, slug):
 
     # posts_comments = Post.objects.popular('comments')
     # popular_posts = Post.objects.prefetch_related('author', 'tags').popular('likes')
-    most_popular_posts = Post.objects.popular_posts('likes', 5) 
+    most_popular_posts = Post.objects.popular_posts('likes', 5)
 
     context = {
         'post': serialized_post,
