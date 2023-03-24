@@ -1,9 +1,34 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.db.models import Count
+
+
+class PostQuerySet(models.QuerySet):
+
+    def popular(self, fild=None):
+        popular = self.annotate(Count(fild)).order_by(f'-{fild}__count')
+        return popular
+
+    def popular_posts(self, fild=None, chart_lenth=5):
+        most_popular_posts = self.popular(fild)[:chart_lenth]
+        posts_comments = self.popular('comments')
+        for post in most_popular_posts:
+            for post_comments in posts_comments:
+                if post_comments.pk == post.pk:
+                    post.comments__count = post_comments.comments__count
+                    break
+
+        return most_popular_posts
+
+    def year(self, year):
+        posts_at_year = self.filter(published_at__year=year).order_by('published_at')
+        return posts_at_year
 
 
 class Post(models.Model):
+    objects = PostQuerySet.as_manager()
+
     title = models.CharField('Заголовок', max_length=200)
     text = models.TextField('Текст')
     slug = models.SlugField('Название в виде url', max_length=200)
@@ -31,6 +56,7 @@ class Post(models.Model):
     def get_absolute_url(self):
         return reverse('post_detail', args={'slug': self.slug})
 
+    # objects = PostQuerySet.as_manager()
     class Meta:
         ordering = ['-published_at']
         verbose_name = 'пост'
@@ -38,6 +64,7 @@ class Post(models.Model):
 
 
 class Tag(models.Model):
+    objects = PostQuerySet.as_manager()
     title = models.CharField('Тег', max_length=20, unique=True)
 
     def __str__(self):
