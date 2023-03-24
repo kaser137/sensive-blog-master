@@ -13,8 +13,8 @@ class PostQuerySet(models.QuerySet):
 
     def fetch_with_comments_count(self):
         """
-        Add attribute 'comments_count'
-        :return: list of posts with attribute 'comments_count'
+        Add attribute 'comments__count'
+        :return: list of posts with attribute 'comments__count'
         """
         popular_posts_ids = [post.id for post in self]
         posts_with_comments = Post.objects.filter(id__in=popular_posts_ids).annotate(Count('comments'))
