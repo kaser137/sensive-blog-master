@@ -11,12 +11,12 @@ class PostQuerySet(models.QuerySet):
         return popular
 
     def fetch_with_comments_count(self, field, chart_length=5):
-        """
+        '''
         Add attribute 'comments_count'
         :param field: field for count and  sort for  result
         :param chart_length: the length of slice
         :return: sorted list of posts with length pointed in argument
-        """
+        '''
         most_popular_posts = self.popular(field)[:chart_length]
         posts_comments = self.annotate(Count('comments'))
         for post in most_popular_posts:
@@ -27,9 +27,6 @@ class PostQuerySet(models.QuerySet):
 
         return most_popular_posts
 
-    def year(self, year):
-        posts_at_year = self.filter(published_at__year=year).order_by('published_at')
-        return posts_at_year
 
 
 class TagQuerySet(models.QuerySet):
