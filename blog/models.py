@@ -10,9 +10,9 @@ class PostQuerySet(models.QuerySet):
         popular = self.prefetch_related('author', 'tags').annotate(Count(field)).order_by(f'-{field}__count')
         return popular
 
-    def popular_posts(self, field, chart_lenth=5):
+    def fetch_with_comments_count(self, field, chart_lenth=5):
         most_popular_posts = self.popular(field)[:chart_lenth]
-        posts_comments = self.popular('comments')
+        posts_comments = self.prefetch_related('author', 'tags').annotate(Count('comments'))
         for post in most_popular_posts:
             for post_comments in posts_comments:
                 if post_comments.pk == post.pk:
