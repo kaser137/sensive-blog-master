@@ -1,32 +1,31 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
-from django.db.models import Count
+from django.db.models import Count, Prefetch
 
 
 class PostQuerySet(models.QuerySet):
 
     def popular(self, field):
-        popular = self.prefetch_related('author', 'tags').annotate(Count(field)).order_by(f'-{field}__count')
+        popular = self.select_related('author').annotate(Count(field)).order_by(f'-{field}__count').prefetch_related(
+            Prefetch('tags', queryset=Tag.objects.annotate(Count('posts'))))
         return popular
 
     def fetch_with_comments_count(self, field, chart_length=5):
-        '''
+        """
         Add attribute 'comments_count'
         :param field: field for count and  sort for  result
         :param chart_length: the length of slice
         :return: sorted list of posts with length pointed in argument
-        '''
+        """
         most_popular_posts = self.popular(field)[:chart_length]
-        posts_comments = self.annotate(Count('comments'))
+        posts_comments = self.popular('comments')
         for post in most_popular_posts:
             for post_comments in posts_comments:
                 if post_comments.pk == post.pk:
                     post.comments__count = post_comments.comments__count
                     break
-
         return most_popular_posts
-
 
 
 class TagQuerySet(models.QuerySet):
@@ -92,15 +91,9 @@ class Tag(models.Model):
 
 
 class Comment(models.Model):
-    post = models.ForeignKey(
-        'Post',
-        on_delete=models.CASCADE,
-        verbose_name='Пост, к которому написан', related_name='comments')
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name='Автор')
-
+    post = models.ForeignKey('Post', on_delete=models.CASCADE, verbose_name='Пост, к которому написан',
+                             related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Автор')
     text = models.TextField('Текст комментария')
     published_at = models.DateTimeField('Дата и время публикации')
 
