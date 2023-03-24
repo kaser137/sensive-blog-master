@@ -37,7 +37,6 @@ class TagQuerySet(models.QuerySet):
 
 class Post(models.Model):
     objects = PostQuerySet.as_manager()
-
     title = models.CharField('Заголовок', max_length=200)
     text = models.TextField('Текст')
     slug = models.SlugField('Название в виде url', max_length=200)
