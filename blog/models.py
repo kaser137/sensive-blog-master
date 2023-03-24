@@ -6,12 +6,12 @@ from django.db.models import Count
 
 class PostQuerySet(models.QuerySet):
 
-    def popular(self, fild=None):
-        popular = self.annotate(Count(fild)).order_by(f'-{fild}__count')
+    def popular(self, field):
+        popular = self.prefetch_related('author', 'tags').annotate(Count(field)).order_by(f'-{field}__count')
         return popular
 
-    def popular_posts(self, fild=None, chart_lenth=5):
-        most_popular_posts = self.popular(fild)[:chart_lenth]
+    def popular_posts(self, field, chart_lenth=5):
+        most_popular_posts = self.popular(field)[:chart_lenth]
         posts_comments = self.popular('comments')
         for post in most_popular_posts:
             for post_comments in posts_comments:
@@ -24,6 +24,13 @@ class PostQuerySet(models.QuerySet):
     def year(self, year):
         posts_at_year = self.filter(published_at__year=year).order_by('published_at')
         return posts_at_year
+
+
+class TagQuerySet(models.QuerySet):
+
+    def popular(self, field):
+        popular = self.annotate(Count(field)).order_by(f'-{field}__count')
+        return popular
 
 
 class Post(models.Model):
@@ -56,7 +63,6 @@ class Post(models.Model):
     def get_absolute_url(self):
         return reverse('post_detail', args={'slug': self.slug})
 
-    # objects = PostQuerySet.as_manager()
     class Meta:
         ordering = ['-published_at']
         verbose_name = 'пост'
@@ -64,7 +70,7 @@ class Post(models.Model):
 
 
 class Tag(models.Model):
-    objects = PostQuerySet.as_manager()
+    objects = TagQuerySet.as_manager()
     title = models.CharField('Тег', max_length=20, unique=True)
 
     def __str__(self):
